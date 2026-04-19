@@ -1,0 +1,7 @@
+# Prevent stray lockfiles from npm/yarn at the repo root
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local

@@ -9,8 +9,8 @@ export interface PetMatch {
 
 let cachedPetEmbeddings: Promise<{ embeddings: number[][]; pets: Pet[] }> | null = null
 
-//warmup as soon as this module is loaded so the first user request
-// doesn't have to wait for the ~20-30s model initialisation.
+// Cache embeddings per serverless instance lifetime.
+// On Vercel, embeddings are computed via HF Inference API so no local warmup needed.
 function getPetEmbeddings() {
   if (!cachedPetEmbeddings) {
     cachedPetEmbeddings = (async () => {
@@ -22,8 +22,6 @@ function getPetEmbeddings() {
   }
   return cachedPetEmbeddings
 }
-
-getPetEmbeddings()
 
 function extractAnimalType(query: string): 'dog' | 'cat' | 'barn cat' | 'rabbit' | null {
   const q = query.toLowerCase()

@@ -1,20 +1,34 @@
-import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers'
+import { InferenceClient } from '@huggingface/inference'
 
-const MODEL = 'Xenova/all-MiniLM-L6-v2'
+const MODEL = 'sentence-transformers/all-MiniLM-L6-v2'
 
-let extractor: FeatureExtractionPipeline | null = null
-
-async function getExtractor(): Promise<FeatureExtractionPipeline> {
-  if (!extractor) {
-    extractor = await pipeline('feature-extraction', MODEL, { device: 'cpu' })
-  }
-  return extractor
+function getClient() {
+  const token = process.env.HF_TOKEN
+  if (!token) throw new Error('HF_TOKEN is not configured')
+  return new InferenceClient(token)
 }
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const ext = await getExtractor()
-  const output = await ext(texts, { pooling: 'mean', normalize: true })
-  return output.tolist() as number[][]
+  const client = getClient()
+  // featureExtraction returns a nested array when given multiple inputs
+  const result = await client.featureExtraction({
+    model: MODEL,
+    inputs: texts,
+  })
+  // Normalise output shape: result may be number[][] or number[][][]
+  const raw = result as number[][] | number[][][]
+  return raw.map((row) => {
+    if (Array.isArray(row[0])) {
+      // Mean-pool token embeddings if the model returned [seq_len, hidden]
+      const matrix = row as number[][]
+      const dim = matrix[0].length
+      const mean = new Array<number>(dim).fill(0)
+      for (const vec of matrix) vec.forEach((v, i) => { mean[i] += v })
+      mean.forEach((_, i) => { mean[i] /= matrix.length })
+      return mean
+    }
+    return row as number[]
+  })
 }
 
 export function cosineSimilarity(a: number[], b: number[]): number {

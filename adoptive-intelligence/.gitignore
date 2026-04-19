@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.local
+.env
 
 # vercel
 .vercel
@@ -40,6 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# agent files
+# agent files (generated on Next.js build)
 AGENTS.md 
 CLAUDE.md
+
+# chat files
+chats.txt

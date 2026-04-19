@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: adoptive-intelligence
+    runtime: node
+    region: oregon
+    buildCommand: cd adoptive-intelligence && npm install -g pnpm && pnpm install && pnpm build
+    startCommand: cd adoptive-intelligence && pnpm start
+    envVars:
+      - key: HF_TOKEN
+        sync: false
+      - key: NODE_VERSION
+        value: 20
+    autoDeploy: true
